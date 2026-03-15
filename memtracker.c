@@ -4,6 +4,7 @@
 #include "memtracker.h"
 #undef malloc
 #undef free
+#undef realloc
 
 Block *head = NULL;
 
@@ -74,12 +75,33 @@ void mtfree(void *memory)
 {
     Block *block = find_by_address(memory);
     if (block == NULL) {
-        fprintf(stderr, RED "ERROR: address %p is not occupied\n" RESET, memory);
+        fprintf(stderr, RED "%s:%d: address %p is not occupied\n" RESET, 
+            block->file, block->line, memory);
         return;
     }
 
     delete(block);
     free(memory);
+}
+
+void *mtrealloc(void *ptr, size_t size, const char* file, int line) {
+    if (ptr == NULL) return mtmalloc(size, file, line);
+    
+    Block *old_block = find_by_address(ptr);
+    
+    void *new_ptr = realloc(ptr, size);
+    
+    if (new_ptr != NULL) {
+        if (old_block != NULL) {
+            old_block->addr = new_ptr;
+            old_block->size = size;
+            old_block->file = file;
+            old_block->line = line;
+        } else {
+            fprintf(stderr, RED "WARNING: realloc untracked address %p at %s:%d\n" RESET, ptr, file, line);
+        }
+    }
+    return new_ptr;
 }
 
 void check_leaks()
