@@ -109,7 +109,7 @@ void *mtrealloc(void *ptr, size_t size, const char* file, int line) {
             new_block->line = line;
             new_block->next = NULL;
             append(new_block);
-            fprintf(stderr, "INFO: address tracking %p added", ptr);
+            fprintf(stderr, "INFO: address tracking %p added\n", ptr);
         }
     }
     return new_ptr;
