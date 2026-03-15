@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "memtracker.h"
+
 #undef malloc
 #undef free
 #undef realloc
