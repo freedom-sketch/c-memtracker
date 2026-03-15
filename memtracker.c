@@ -75,8 +75,7 @@ void mtfree(void *memory)
 {
     Block *block = find_by_address(memory);
     if (block == NULL) {
-        fprintf(stderr, RED "%s:%d: address %p is not occupied\n" RESET, 
-            block->file, block->line, memory);
+        fprintf(stderr, RED "address %p is not occupied\n" RESET, memory);
         return;
     }
 
@@ -86,9 +85,13 @@ void mtfree(void *memory)
 
 void *mtrealloc(void *ptr, size_t size, const char* file, int line) {
     if (ptr == NULL) return mtmalloc(size, file, line);
+    if (size == 0 && ptr != NULL) {
+        mtfree(ptr);
+        return NULL;
+    }
     
     Block *old_block = find_by_address(ptr);
-    
+
     void *new_ptr = realloc(ptr, size);
     
     if (new_ptr != NULL) {
@@ -99,6 +102,14 @@ void *mtrealloc(void *ptr, size_t size, const char* file, int line) {
             old_block->line = line;
         } else {
             fprintf(stderr, RED "WARNING: realloc untracked address %p at %s:%d\n" RESET, ptr, file, line);
+            Block *new_block = malloc(sizeof(Block));
+            new_block->addr = new_ptr;
+            new_block->size = size;
+            new_block->file = file;
+            new_block->line = line;
+            new_block->next = NULL;
+            append(new_block);
+            fprintf(stderr, "INFO: address tracking %p added", ptr);
         }
     }
     return new_ptr;
